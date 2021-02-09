@@ -1,0 +1,9 @@
+dependencies {
+    implementation(project(":domain"))
+    implementation project(":shared-vocabulary")
+}
+
+allOpen {
+    annotation("itau.favorecidos.shared.vocabulary.annotation.UseCase")
+}
+

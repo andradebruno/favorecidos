@@ -1,0 +1,123 @@
+buildscript {
+    ext {
+        springBootVersion = '2.4.2'
+        dependencyManagementPluginVersion = '1.0.11.RELEASE'
+    }
+
+    repositories {
+        allprojects {
+            mavenLocal()
+            mavenCentral()
+        }
+    }
+
+    dependencies {
+        allprojects {
+            classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+            classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+            classpath("org.jetbrains.kotlin:kotlin-noarg:${kotlinVersion}")
+
+            classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+            classpath("io.spring.gradle:dependency-management-plugin:${dependencyManagementPluginVersion}")
+        }
+    }
+}
+
+plugins {
+    id("org.springframework.boot") version "2.4.2" apply(false)
+    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("org.jetbrains.kotlin.jvm") version "1.4.21" apply(false)
+    id("org.jetbrains.kotlin.plugin.spring") version "1.4.21" apply(false)
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.4.21" apply(false)
+}
+
+dependencies {
+    project(':sboot')
+}
+
+allprojects {
+    apply plugin: "idea"
+    apply plugin: "application"
+    apply plugin: "kotlin"
+    apply plugin: 'kotlin-spring'
+    apply plugin: "org.jetbrains.kotlin.jvm"
+    apply plugin: "org.jetbrains.kotlin.plugin.spring"
+
+
+    compileKotlin {
+        kotlinOptions {
+            freeCompilerArgs = ["-Xjsr305=strict"]
+            jvmTarget = JavaVersion.VERSION_11.toString()
+        }
+    }
+
+    compileTestKotlin {
+        kotlinOptions {
+            freeCompilerArgs = ["-Xjsr305=strict"]
+            jvmTarget = JavaVersion.VERSION_11.toString()
+        }
+    }
+
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        //kotlin
+        implementation("org.jetbrains.kotlin:kotlin-reflect")
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+        // Spring
+        implementation("org.springframework.boot:spring-boot-starter:${springBootVersion}")
+        implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+        implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
+
+
+        // others
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${property("jacksonVersion")}")
+        implementation('br.com.caelum.stella:caelum-stella-core:2.1.2')
+        implementation('br.com.caelum.stella:caelum-stella-bean-validation:2.1.2')
+
+
+        //tests
+        testImplementation(enforcedPlatform("org.junit:junit-bom:${property("jUnitVersion")}")) // JUnit 5 BOM
+        testImplementation("org.junit.jupiter:junit-jupiter-api:${property("jUnitVersion")}")
+        testImplementation("org.junit.jupiter:junit-jupiter-params:${property("jUnitVersion")}")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${property("jUnitVersion")}")
+
+        testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {
+            exclude group: 'org.junit.vintage'
+            exclude group: 'org.mockito'
+        }
+    }
+
+    test {
+        useJUnitPlatform() {
+            excludeTags("integration")
+        }
+        failFast = false
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+
+    task integrationTest(type: Test) {
+        group = "verification"
+        useJUnitPlatform() {
+            includeTags("integration")
+        }
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+        check.dependsOn it
+        shouldRunAfter test
+    }
+
+}
+
+
+
